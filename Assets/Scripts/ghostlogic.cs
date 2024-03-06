@@ -13,7 +13,7 @@ public class ghostlogic : MonoBehaviour
     private float bulletSpeed = 7f;
     public Transform player;
    private float healthPoints = 100;
-   private float knockbackForce = 60f;
+   private float knockbackForce = 6f;
 
     void Start()
     {
@@ -54,7 +54,7 @@ public class ghostlogic : MonoBehaviour
         Vector2 knockbackDirection = (transform.position - collision.transform.position).normalized;
 
         // Apply a force in that direction
-        GetComponent<Rigidbody2D>().AddForce(knockbackDirection * knockbackForce, ForceMode2D.Impulse);
+       transform.position = new Vector3(transform.position.x + knockbackDirection.x * knockbackForce, transform.position.y, transform.position.z);
 
         GetComponent<SpriteRenderer>().color = Color.red;
         Invoke("ResetColor", 0.05f);

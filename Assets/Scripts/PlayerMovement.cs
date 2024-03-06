@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Tilemaps;
 
 
 public class PlayerMovement : MonoBehaviour
@@ -14,16 +15,21 @@ public class PlayerMovement : MonoBehaviour
     public GameObject Heart2;
     public GameObject Heart3;
 
+    public Tilemap tilemap;
+    public Tile tile;
+
     [SerializeField]
     private Transform groundCheck;
     [SerializeField]
-    private float groundCheckRadius = 0.4f;
+    private float groundCheckRadius = 0.2f;
     [SerializeField]
 
     private float movementSpeed = 2f;
+
+    public Cinemachine.CinemachineVirtualCamera cinemachineCamera;
     
     [SerializeField]
-     private float jumpForce = 10f;
+     private float jumpForce = 15f;
 
     [SerializeField]
       private LayerMask collisionMask;
@@ -31,7 +37,7 @@ public class PlayerMovement : MonoBehaviour
        [SerializeField]
        private int maxJumps = 2;
 
-       private float runningSpeed = 5f;
+       private float runningSpeed = 10f;
 
         private int _jumpsLeft;
 
@@ -48,13 +54,40 @@ public float moveInput;
         _jumpsLeft = maxJumps;
         if (SceneManager.GetActiveScene().buildIndex == 1)
         {
-            jumpForce += 5;
+            jumpForce = 20;
         }
+        if (SceneManager.GetActiveScene().buildIndex == 2)
+        {
+            StartCoroutine(ExecuteAfterTime(5));
+            jumpForce = 15;
+        }
+    }
+
+    IEnumerator ExecuteAfterTime(float time)
+    {
+        yield return new WaitForSeconds(time);
+        GameObject.FindWithTag("lAVA").SetActive(false);
     }
 
     void Update()
     {
           moveInput = Input.GetAxis("Horizontal");
+
+         if (Input.GetMouseButton(0))
+    {
+        Debug.Log("Mouse Clicked");
+        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector3Int gridPos = tilemap.WorldToCell(mousePos);
+        tilemap.SetTile(gridPos, tile);
+    }
+    if (Input.GetMouseButton(1))
+    {
+        Debug.Log("Mouse Clicked");
+        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector3Int gridPos = tilemap.WorldToCell(mousePos);
+        tilemap.SetTile(gridPos, null);
+    }
+          
 
     if (facingRight == false && moveInput > 0)
     {
@@ -77,7 +110,10 @@ public float moveInput;
 
         _rigidbody.velocity = new Vector2(inputX * movementSpeed, _rigidbody.velocity.y);
 
-        if (IsGrounded() && _rigidbody.velocity.y <= 0)
+
+        if (SceneManager.GetActiveScene().buildIndex == 1 || SceneManager.GetActiveScene().buildIndex == 0)
+        {
+     if (IsGrounded() && _rigidbody.velocity.y <= 0)
         {
             _jumpsLeft = maxJumps;
         }
@@ -87,7 +123,29 @@ public float moveInput;
             _rigidbody.velocity = new Vector2(_rigidbody.velocity.x, jumpForce);
             _jumpsLeft -= 1;
         }
+        if (transform.position.y >= 75)
+        {
+            GameObject[] lAVA = GameObject.FindGameObjectsWithTag("lAVA");
+            foreach (GameObject l in lAVA)
+            {
+                Destroy(l);
+            }
+        }
+        }
+        if (SceneManager.GetActiveScene().buildIndex == 2)
+        {
+            if (IsGrounded() && _rigidbody.velocity.y <= 0)
+            {
+                _jumpsLeft = 1;
+            }
 
+            if (jumpInput && _jumpsLeft > 0)
+            {
+                _rigidbody.velocity = new Vector2(_rigidbody.velocity.x, jumpForce);
+                _jumpsLeft -= 1;
+            }
+        }
+    
     }
     void Flip()
 {
@@ -154,7 +212,20 @@ private void OnTriggerEnter2D(Collider2D collision)
         Destroy(gameObject);
     
     }
+    if (collision.gameObject.CompareTag("Boost"))
+    {
+        jumpForce = 70;
+    }
 }
+
+private void OnTriggerExit2D(Collider2D collision)
+{
+    if (collision.gameObject.CompareTag("Boost"))
+    {
+        jumpForce = 15;
+    }
+}
+
 
 private void OnCollisionEnter2D(Collision2D collision)
 {

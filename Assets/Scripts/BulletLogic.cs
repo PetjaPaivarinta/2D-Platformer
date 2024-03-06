@@ -8,7 +8,6 @@ public class BulletLogic : MonoBehaviour
     private float bulletSpeed = 40f;
     public GameObject MuzzleFlashPrefab;
     public GameObject bulletPrefab;
-    public Transform MuzzleLocation;
     public Text ammoText;
     public int ammoCount = 10;
     private float fireRate = 0.7f;
@@ -38,7 +37,6 @@ public void Shoot()
     if (canShoot && ammoCount > 0)
     {
         FireBullet();
-        Effect();
         ammoCount--;
         ammoText.text = ammoCount.ToString();
         canShoot = false;
@@ -67,23 +65,25 @@ void Update()
     if (Input.GetButtonDown("Fire1") && ammoCount > 0)
     {
         Shoot();
+        showMuzzleFlash();
 
     }
     currentRecoil = Mathf.Lerp(currentRecoil, 0, Time.deltaTime * recoilSpeed);
 }
- void Effect ()
+
+IEnumerator showMuzzleFlash()
 {
-    GameObject clone = Instantiate(MuzzleFlashPrefab, MuzzleLocation.position, Quaternion.identity);
-    float size = Random.Range(0.6f, 0.9f);
-    clone.transform.localScale = new Vector3(size, size, size);
-    Destroy(clone, 0.02f);
-}
+    MuzzleFlashPrefab.SetActive(true);
+    yield return new WaitForSeconds(0.1f);
+    MuzzleFlashPrefab.SetActive(false);
+
 void FixedUpdate () {
 		if (transform.position.y < -10) {
 			Destroy(gameObject);
         }
-        if (ammoCount == 0) {
+        if (ammoCount > 1) {
             ammoText.text = "Find Ammo!";
         }
 	}
+}
 }
